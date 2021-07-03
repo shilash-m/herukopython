@@ -7,16 +7,16 @@ from resource.user import UserRegister
 from resource.item import Item, ItemList
 from resource.store import Store, StoreList
 
-app = Flask(__name__)
+application = Flask(__name__)
 
-app.config['DEBUG'] = True
+application.config['DEBUG'] = True
 
-app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///data.db"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.secret_key = 'jose'
-api = Api(app)
+application.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///data.db"
+application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+application.secret_key = 'jose'
+api = Api(application)
 
-jwt = JWT(app, authenticate, identity)  # /auth
+jwt = JWT(application, authenticate, identity)  # /auth
 
 api.add_resource(Store, '/store/<string:name>')
 api.add_resource(Item, '/item/<string:name>')
@@ -26,6 +26,12 @@ api.add_resource(StoreList, '/stores')
 api.add_resource(UserRegister, '/register')
 
 if __name__ == '__main__':
-    
+    from db import db
+    db.init_app(application)
 
-    app.run(port=5000)
+
+    @application.before_first_request
+    def create_tables():
+        db.create_all()
+
+    application.run(port=5000)
